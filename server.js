@@ -14,7 +14,7 @@ const orderRoutes = require("./routes/orderRoutes")
 const path = require('path');
 
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: "https://www.shop.sndgroup.net",
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true,
 }));
