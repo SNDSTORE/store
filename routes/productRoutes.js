@@ -50,7 +50,20 @@ router.post('/', authMiddleware(['admin']),upload.array('images', 4),async (req,
     }
 });
 
-router.put('/:id',authMiddleware(['admin']), upload.array('images', 4), async (req, res) => {
+// wrap multer upload so that file errors are handled explicitly
+router.put('/:id', authMiddleware(['admin']), (req, res, next) => {
+  upload.array('images', 4)(req, res, (err) => {
+    if (err) {
+      console.error('multer upload error:', err);
+      if (err instanceof multer.MulterError) {
+        // limit or other multer-specific error
+        return res.status(400).send({ error: err.message });
+      }
+      return res.status(500).send({ error: 'Image upload failed' });
+    }
+    next();
+  });
+}, async (req, res) => {
     try {
       const { name, description, price, category, stock } = req.body;
   
@@ -62,15 +75,18 @@ router.put('/:id',authMiddleware(['admin']), upload.array('images', 4), async (r
         stock
       };
   
-      // إذا أرسل صور جديدة
+      // إذا أرسل صور جديدة، ندمجها مع الصور الحالية بدلاً من استبدالها
       if (req.files && req.files.length > 0) {
-        updateData.imagesUrl = req.files.map(file => file.path);
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).send({ error: 'Product not found' });
+        const newUrls = req.files.map(file => file.path);
+        updateData.imagesUrl = [ ...(product.imagesUrl || []), ...newUrls ];
       }
   
       const updatedProduct = await Product.findByIdAndUpdate(
         req.params.id,
         updateData,
-        { new: true }
+        { new: true, runValidators: true }
       );
   
       if (!updatedProduct) return res.status(404).send({ error: 'Product not found' });
@@ -78,7 +94,8 @@ router.put('/:id',authMiddleware(['admin']), upload.array('images', 4), async (r
       res.send(updatedProduct);
     } catch (err) {
       console.error(err);
-      res.status(500).send({ error: 'Failed to update product' });
+      // if it's a cast error or validation issue, propagate message
+      return res.status(500).send({ error: err.message || 'Failed to update product' });
     }
   });
 
