@@ -46,21 +46,28 @@ router.post('/', authMiddleware(['admin']),upload.array('images', 4),async (req,
         await newProduct.save();
         res.status(201).send("Product Added Successfuly");
     } catch (err) {
-        res.status(400).send(err.message);
+        console.error('product save error:', err);
+        res.status(400).send({ error: err.message });
     }
 });
 
 // wrap multer upload so that file errors are handled explicitly
 router.put('/:id', authMiddleware(['admin']), (req, res, next) => {
+  // log body and files for debugging
+  console.log('PUT /products/' + req.params.id + ' body:', req.body);
   upload.array('images', 4)(req, res, (err) => {
     if (err) {
       console.error('multer upload error:', err);
+      // always send the message so client sees what happened
+      const msg = err && err.message ? err.message : 'Image upload failed';
       if (err instanceof multer.MulterError) {
-        // limit or other multer-specific error
-        return res.status(400).send({ error: err.message });
+        // multer-specific error (file size, count, etc.)
+        return res.status(400).send({ error: msg });
       }
-      return res.status(500).send({ error: 'Image upload failed' });
+      return res.status(500).send({ error: msg });
     }
+    // after multer success, log the files
+    console.log('files uploaded:', req.files && req.files.length);
     next();
   });
 }, async (req, res) => {
@@ -93,7 +100,7 @@ router.put('/:id', authMiddleware(['admin']), (req, res, next) => {
   
       res.send(updatedProduct);
     } catch (err) {
-      console.error(err);
+      console.error('update error:', err);
       // if it's a cast error or validation issue, propagate message
       return res.status(500).send({ error: err.message || 'Failed to update product' });
     }
