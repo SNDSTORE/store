@@ -21,3 +21,13 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# environment
+.env
+
+# uploaded files (we now use Cloudinary; local uploads should not be committed)
+/uploads/
+
+# IDE
+.vscode/
+.idea/

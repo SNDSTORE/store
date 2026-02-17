@@ -1,18 +1,10 @@
 const express = require('express');
 const multer = require('multer');
+const { storage } = require('../utils/cloudinary');
 const Product = require('../models/Product');
 const authMiddleware = require('../middlewares/authMiddleware');
 
 const router = express.Router();
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    },
-});
 
 const upload = multer({ storage });
 
@@ -38,8 +30,8 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', authMiddleware(['admin']),upload.array('images', 4),async (req, res) => {
     
-    const { name, description, price, category, stock } = req.body;
-            const imagesUrl = req.files ? req.files.map(file => `/uploads/${file.filename}`) : null;
+        const { name, description, price, category, stock } = req.body;
+          const imagesUrl = req.files ? req.files.map(file => file.path) : null;
     
             const newProduct = new Product({
                 name,
@@ -72,7 +64,7 @@ router.put('/:id',authMiddleware(['admin']), upload.array('images', 4), async (r
   
       // إذا أرسل صور جديدة
       if (req.files && req.files.length > 0) {
-        updateData.imagesUrl = req.files.map(file => `/uploads/${file.filename}`);
+        updateData.imagesUrl = req.files.map(file => file.path);
       }
   
       const updatedProduct = await Product.findByIdAndUpdate(

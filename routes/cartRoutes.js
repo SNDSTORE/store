@@ -1,17 +1,9 @@
 const express = require('express');
 const Cart = require('../models/Cart');
 const multer = require('multer');
+const { storage } = require('../utils/cloudinary');
 const router = express.Router();
 const authMiddleware = require('../middlewares/authMiddleware');
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname}`);
-    },
-});
 
 const upload = multer({ storage });
 router.post(
@@ -20,12 +12,14 @@ router.post(
     upload.array('images', 4),
     async (req, res) => {
         const { name, price, stock,imageUrl } = req.body;
+        // If Cloudinary uploaded files exist, use first file's URL, otherwise keep provided imageUrl
+        const finalImageUrl = (req.files && req.files.length > 0) ? req.files[0].path : imageUrl;
         const cart = new Cart({
             name,
             price,
             stock,
             addedBy: req.user._id,
-            imageUrl,
+            imageUrl: finalImageUrl,
         });
 
         try {
