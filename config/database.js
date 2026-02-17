@@ -13,7 +13,16 @@ const {
 } = process.env;
 
 let mongoUri = MONGODB_URI;
+let mongoUri = MONGODB_URI;
+
 if (!mongoUri) {
+  // In production we must require an explicit MONGODB_URI to avoid accidental
+  // connections to localhost. In development it's acceptable to fall back.
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: MONGODB_URI is not set in production environment. Aborting.');
+    process.exit(1);
+  }
+
   // If user/pass provided, include them safely (URL-encoded)
   if (MONGODB_USER && MONGODB_PASS) {
     const user = encodeURIComponent(MONGODB_USER);

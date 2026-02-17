@@ -29,7 +29,10 @@ app.use('/products',productRoutes)
 app.use('/cart',cartRoutes)
 app.use('/userInfo',userInfoRoutes)
 app.use('/orders',orderRoutes)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve local uploads only in development. Production uses Cloudinary.
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+}
 app.get("/",(req,res)=>{
   res.send("Welcome to SND Store")
 })
