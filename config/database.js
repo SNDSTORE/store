@@ -13,7 +13,6 @@ const {
 } = process.env;
 
 let mongoUri = MONGODB_URI;
-let mongoUri = MONGODB_URI;
 
 if (!mongoUri) {
   // In production we must require an explicit MONGODB_URI to avoid accidental
