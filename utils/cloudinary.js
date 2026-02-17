@@ -7,6 +7,11 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// warn early if configuration is missing
+if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+  console.warn('WARNING: Cloudinary credentials are not set. Image uploads will fail.');
+}
+
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {

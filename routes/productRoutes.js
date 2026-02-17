@@ -101,8 +101,11 @@ router.put('/:id', authMiddleware(['admin']), (req, res, next) => {
       res.send(updatedProduct);
     } catch (err) {
       console.error('update error:', err);
-      // if it's a cast error or validation issue, propagate message
-      return res.status(500).send({ error: err.message || 'Failed to update product' });
+      // include stack trace in response for debugging (remove in prod)
+      return res.status(500).send({
+        error: err.message || 'Failed to update product',
+        stack: err.stack,
+      });
     }
   });
 
